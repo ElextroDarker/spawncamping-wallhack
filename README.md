@@ -1,16 +1,15 @@
-Refer to poco's fork for development builds of this theme.
+Refer to ca25nada's original repo for the original theme.
+https://github.com/ca25nada/spawncamping-wallhack
 
+Refer to poco's fork for development builds of this theme.
 https://github.com/poco0317/spawncamping-wallhack
 
 ---
 ﻿# spawncamping-wallhack
 A SM5 Theme ported for Etterna, a client aimed primarily for KB players.
 
-Here are some old screenshots (very old)
-<a href="http://imgur.com/a/RpFvQ" target="_blank">Screenshots</a>
-
-See newer screenshots here (latest versions)
-<a href="https://imgur.com/a/Pad27GS" target="_blank">Screenshots</a>
+Here is a screenshot
+<img src="Screenshots/ScreenSelect.png"/>
 
 Requirements: The latest release version of Etterna. Older releases are for SM5.
 
