@@ -1,16 +1,114 @@
 local t = Def.ActorFrame{}
-t[#t+1] = LoadActor("_mouse", "ScreenPlayerOptions")
+t[#t+] = LoadActor("mouse", "ScreenPlayerOptions")
 
 local topFrameHeight = 35
 local bottomFrameHeight = 54
 local borderWidth = 4
 
+local function MPinput(event)
+    if event.type == "InputEventType_FirstPress" then
+        if event.GameButton == "MouseLeft" then
+            local songOptions = GAMESTATE:GetCurrentSongOptionsObject('ModsLevel_Current')
+            local modifiers = songOptions:GetModifiers()
+
+            if event.DeviceInput.button == "DeviceButton_left" then
+                -- Change the setting based on the position of the mouse click
+                local row, col = SCREENMAN:GetTopScreen():GetRowAndColFromMouse()
+
+                if row == NoteskinRow then
+                    -- NoteSkins section
+                    local newIndex = (col - NSPreviewX) / NSPreviewXSpan + 1
+                    if newIndex >= 1 and newIndex <= #NSDirTable then
+                        local newDir = NSDirTable[newIndex]
+                        songOptions:SetModifier{Name="NoteSkins", Value=newDir}
+                        SCREENMAN:GetTopScreen():DoScreenFinish(PLAYER_1)
+                    end
+                elseif row == AvatarYP1 then
+                    -- Scroll Speed section
+                    local speed, mode = GetSpeedModeAndValueFromPoptions(PLAYER_1)
+                    local rate = GAMESTATE:GetSongOptionsObject('ModsLevel_Current'):MusicRate() or 1
+                    local newSpeed
+
+                    if param.mode == "x" then
+                        newSpeed = math.round(bpms[1]*rate*1.1*speed/100)
+                    elseif param.mode == "C" then
+                        newSpeed = math.round(speed * 1.1)
+                    else
+                        newSpeed = math.round(bpms[1]*1.1*speed/bpms[2])
+                    end
+
+                    SetSpeedModeAndValueFromPoptions(PLAYER_1, mode, newSpeed)
+                end
+            end
+        end
+    end
+end
+
+t[#t+1] = LoadFont("Common Normal") .. {
+    InitCommand=function(self)
+        self:xy(AvatarXP1+33,AvatarYP1+19):halign(0):zoom(0.40)
+    end,
+    BeginCommand=function(self)
+        local speed, mode= GetSpeedModeAndValueFromPoptions(PLAYER_1)
+        self:playcommand("SpeedChoiceChanged", {pn= PLAYER_1, mode= mode, speed= speed})
+    end,
+    PlayerJoinedMessageCommand=function(self)
+        self:queuecommand("Set")
+    end,
+    PlayerUnjoinedMessageCommand=function(self)
+        self:queuecommand("Set")
+    end,
+    SpeedChoiceChangedMessageCommand=function(self,param)
+        if param.pn == PLAYER_1 then
+            local rate = GAMESTATE:GetSongOptionsObject('ModsLevel_Current'):MusicRate() or 1
+            local text = ""
+            if param.mode == "x" then
+                if not bpms[1] then
+                    text = "??? - ???"
+                elseif bpms[1] == bpms[2] then
+                    text = math.round(bpms[1]*rate*param.speed/100)
+                else
+                    text = string.format("%d - %d",math.round(bpms[1]*rate*param.speed/100),math.round(bpms[2]*rate*param.speed/100))
+                end
+            elseif param.mode == "C" then
+                text = param.speed
+            else
+                if not bpms[1] then
+                    text = "??? - "..param.speed
+                elseif bpms[1] == bpms[2] then
+                    text = param.speed
+                else
+                    local factor = param.speed/bpms[2]
+                    text = string.format("%d - %d",math.round(bpms[1]*factor),param.speed)
+                end
+            end
+            self:settext(text)
+        end
+    end,
+    InputEventCommand=function(self, event)
+        if event.type == "InputEventType_FirstPress" and event.GameButton == "MouseLeft" then
+            local speed, mode = GetSpeedModeAndValueFromPoptions(PLAYER_1)
+            local rate = GAMESTATE:GetSongOptionsObject('ModsLevel_Current'):MusicRate() or 1
+            local newSpeed
+
+            if mode == "x" then
+                newSpeed = math.round(bpms[1]*rate*1.1*speed/100)
+            elseif mode == "C" then
+                newSpeed = math.round(speed * 1.1)
+            else
+                newSpeed = math.round(bpms[1]*1.1*speed/bpms[2])
+            end
+
+            SetSpeedModeAndValueFromPoptions(PLAYER_1, mode, newSpeed)
+        end
+    end
+}
 
 local t = Def.ActorFrame{
-	Name="PlayerAvatar",
-	BeginCommand = function(self)
-		SCREENMAN:GetTopScreen():AddInputCallback(MPinput)
-	end
+    Name="PlayerAvatar",
+    BeginCommand = function(self)
+        SCREENMAN:GetTopScreen():AddInputCallback(MPinput)
+    end
 }
 
 local profileP1
@@ -207,43 +305,46 @@ local function NSkinPreviewExtraTaps()
 	return out
 end
 t[#t + 1] =
-	Def.ActorFrame {
-	OnCommand = function(self)
-		self:xy(NSPreviewX, NSPreviewY)
-		for i = 0, SCREENMAN:GetTopScreen():GetNumRows() - 1 do
-			if SCREENMAN:GetTopScreen():GetOptionRow(i) and SCREENMAN:GetTopScreen():GetOptionRow(i):GetName() == "NoteSkins" then
-				NoteskinRow = i
-			end
-		end
-		self:SetUpdateFunction(
-			function(self)
-				local row = SCREENMAN:GetTopScreen():GetCurrentRowIndex(PLAYER_1)
-				local pos = 0
-				if row > 4 then
-					pos =
-						NSPreviewY + NoteskinRow * OptionRowHeight -
-						(SCREENMAN:GetTopScreen():GetCurrentRowIndex(PLAYER_1) - 4) * OptionRowHeight
-				else
-					pos = NSPreviewY + NoteskinRow * OptionRowHeight
-				end
-				self:y(pos)
-				self:visible(NoteskinRow - row > -3 and NoteskinRow - row < 7)
-			end
-		)
-	end,
-	Def.ActorFrame {
-		NSkinPreviewWrapper(NSDirTable[1], "Tap Note")
-	},
-	Def.ActorFrame {
-		InitCommand = function(self)
-			self:y(NSPreviewReceptorY)
-		end,
-		NSkinPreviewWrapper(NSDirTable[1], "Receptor")
-	}
-}
+    Def.ActorFrame {
+        OnCommand = function(self)
+            self:xy(NSPreviewX, NSPreviewY)
+            for i = 0, SCREENMAN:GetTopScreen():GetNumRows() - 1 do
+                if SCREENMAN:GetTopScreen():GetOptionRow(i) and SCREENMAN:GetTopScreen():GetOptionRow(i):GetName() == "NoteSkins" then
+                    NoteskinRow = i
+                end
+            end
+            self:SetUpdateFunction(
+                function(self)
+                    local row = SCREENMAN:GetTopScreen():GetCurrentRowIndex(PLAYER_1)
+                    local pos = 0
+                    if row > 4 then
+                        pos =
+                            NSPreviewY + NoteskinRow * OptionRowHeight -
+                            (SCREENMAN:GetTopScreen():GetCurrentRowIndex(PLAYER_1) - 4) * OptionRowHeight
+                    else
+                        pos = NSPreviewY + NoteskinRow * OptionRowHeight
+                    end
+                    self:y(pos)
+                    self:visible(NoteskinRow - row > -3 and NoteskinRow - row < 7)
+                end
+            )
+        end,
+        Def.ActorFrame {
+            NSkinPreviewWrapper(NSDirTable[1], "Tap Note")
+        },
+        Def.ActorFrame {
+            InitCommand = function(self)
+                self:y(NSPreviewReceptorY)
+            end,
+            NSkinPreviewWrapper(NSDirTable[1], "Receptor")
+        }
+    }
 if GetScreenAspectRatio() > 1.7 then
 	t[#t][#(t[#t]) + 1] = NSkinPreviewExtraTaps()
 end
 
 t[#t+1] = LoadActor("_frame")
+
+t[#t+1] = LoadActor("_cursor", "ScreenPlayerOptions")
+
 return t
