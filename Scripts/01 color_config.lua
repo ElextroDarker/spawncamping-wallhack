@@ -3,7 +3,7 @@ local defaultConfig = {
 	main = {
 		frame = "#000000",
 		highlight = "#00AEEF",
-		background = "#CCCCEE",
+		background = "#222233", --#CCCCEE
 		underlay = "#CCCCEE",
 		warning = "#EEBB00",
 		enabled = "#4CBB17",
@@ -14,7 +14,7 @@ local defaultConfig = {
 		headerFrameText = "#FFFFFF",
 		transition = "#888888",
 		tabFrame = "#333333",
-		tabButton = "#FFFFFF",
+		tabButton = "#222233", --#FFFFFF
 	},
 
 	clearType = {
