@@ -117,7 +117,8 @@ t[#t+1] = LoadActor("../../_mouse", "ScreenSelectMusic")
 -- Filtering contains: filters, tags
 -- Downloads contains: Downloads, Bundles
 -- Random Song: left click for any song, right click for just a song in this pack
-local tab = TAB:new({"Profile", "Song Info", "Group Info", "Filtering", "Downloads", "Random Song"})
+-- Options: opens StepMania legacy options menu
+local tab = TAB:new({"Profile", "Song Info", "Group Info", "Filtering", "Downloads", "Random Song", "Options"})
 t[#t+1] = tab:makeTabActors() .. {
 	OnCommand = function(self)
 		self:y(SCREEN_HEIGHT+tab.height/2 - 17)
@@ -172,6 +173,8 @@ t[#t+1] = tab:makeTabActors() .. {
 					wheel:SelectSong(rsong)
 				end
 			end
+		elseif params.name == "Options" then
+			SCREENMAN:AddNewScreenToTop("ScreenPlayerOptions")
 		end
 	end
 }
